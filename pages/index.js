@@ -7,6 +7,10 @@ export default function HomePage() {
   const [account, setAccount] = useState(undefined);
   const [atm, setATM] = useState(undefined);
   const [balance, setBalance] = useState(undefined);
+  const [count, setCount] = useState(0);
+
+  const [transactionHistory, setTransactionHistory] = useState([]);
+  const [transactionCount, setTransactionCount] = useState(0);
 
   const contractAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
   const atmABI = atm_abi.abi;
@@ -61,19 +65,52 @@ export default function HomePage() {
 
   const deposit = async() => {
     if (atm) {
-      let tx = await atm.deposit(1);
+      let tx = await atm.deposit(count);
       await tx.wait()
       getBalance();
+      setTransacCount("Deposit", count);
+
+    }
+  }
+  const withdraw = async() => {
+    if (atm) {
+      let tx = await atm.withdraw(count);
+      await tx.wait()
+      getBalance();
+      setTransacCount("Withdraw", count);
     }
   }
 
-  const withdraw = async() => {
-    if (atm) {
-      let tx = await atm.withdraw(1);
-      await tx.wait()
-      getBalance();
+  const setTransacCount = (status, amount) => {
+    const counter = transactionCount;
+
+    const transaction = [amount, status];
+    const transacHistoryTemp = transactionHistory;
+    transacHistoryTemp.push(transaction);
+    setTransactionHistory(transacHistoryTemp);
+
+    const transacCount = transactionCount + 1;
+    setTransactionCount(transacCount);
+  };
+
+  const showTransactionHistory = () => {
+    if (transactionHistory.length === 0) {
+      return <p>No transaction has been made today.</p>;
+    } else {
+      return (
+        <div>
+        <h2>Transaction History</h2>
+        {transactionHistory.map((transaction, index) => (
+          <div key={index}>
+            <p>{transaction[1]}: {transaction[0]} ETH</p>
+            <br />
+          </div>
+        ))}
+      </div>
+      );
     }
-  }
+  };
+
 
   const initUser = () => {
     // Check to see if user has Metamask
@@ -94,8 +131,16 @@ export default function HomePage() {
       <div>
         <p>Your Account: {account}</p>
         <p>Your Balance: {balance}</p>
-        <button onClick={deposit}>Deposit 1 ETH</button>
-        <button onClick={withdraw}>Withdraw 1 ETH</button>
+        <p>Your Count: {count}</p>
+        <br></br>
+        <button onClick={() => setCount(count + 1)}>Increment</button>
+        <button onClick={() => setCount(count - 1)}>Decrement</button>
+        <button onClick={() => setCount(0)}>Reset</button>
+        <br></br>
+        <button onClick={deposit}>Deposit ETH</button>
+        <button onClick={withdraw}>Withdraw ETH</button>
+        
+        {showTransactionHistory()}
       </div>
     )
   }
